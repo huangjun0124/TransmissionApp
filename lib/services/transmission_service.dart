@@ -48,12 +48,14 @@ class WebInterface {
   Future<AsyncReturn> getSession() async {
     AsyncReturn model = AsyncReturn();
     Response response;
+    bool _isError = false;
     _refreshHeader();
     try {
       response = await dio.post(
           GlobalVariables.userInfo.url + "/transmission/rpc",
           data: {"method": "session-get"});
     } on DioError catch (error) {
+      _isError = true;
       if (error.response.statusCode == 409) {
         response = error.response;
         _sessionId =
@@ -73,11 +75,13 @@ class WebInterface {
     if (response != null) {
       model.isSuccess = true;
       model.data = response.data;
-      GlobalVariables.downloadDir =
-          ((response.data as Map<String, dynamic>)["arguments"]
-              as Map<String, dynamic>)["download-dir"];
+      if (!_isError) {
+        GlobalVariables.downloadDir =
+            ((response.data as Map<String, dynamic>)["arguments"]
+                as Map<String, dynamic>)["download-dir"];
+      }
+      return model;
     }
-    return model;
   }
 
   Future<AsyncReturn> removeTorrent(int id) async {
@@ -202,6 +206,7 @@ class WebInterface {
       try {
         model.data = TrSpaceInfoModel(
             path: arguments["path"], freeSpace: arguments["size-bytes"]);
+        model.isSuccess = true;
       } catch (e) {
         model.isSuccess = false;
         model.message = e.toString();
@@ -239,7 +244,7 @@ class WebInterface {
       GlobalVariables.downloadDir = dir;
     } else {
       model.isSuccess = false;
-      model.message = 'un-mapped error';
+      model.message = data["result"];
     }
     return model;
   }

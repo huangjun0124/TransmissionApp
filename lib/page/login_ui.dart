@@ -32,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _isInitialLoading = false;
     });
-    if (_userInfo.passWord != null) {
+    if (_userInfo.passWord != null && GlobalVariables.isAutoLogin) {
       _doLogin();
     }
   }

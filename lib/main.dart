@@ -5,11 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:transmission_app/page/login_ui.dart';
 import 'package:transmission_app/page/torrents.dart';
-import 'package:transmission_app/page/upload_torrent.dart';
 import 'package:transmission_app/services/http_helper/http_dio.dart';
 import 'package:transmission_app/services/http_helper/req_header.dart';
 
 import 'model/global_vars.dart';
+import 'page/upload_torrent.dart';
 
 // Must be top-level function
 _parseAndDecode(String response) {
@@ -39,13 +39,25 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.light,
           primarySwatch: Colors.blueGrey,
           accentColor: Colors.purpleAccent,
-          buttonColor: Colors.redAccent),
+          buttonColor: Colors.blueGrey),
       routes: {
         '/': (BuildContext context) => LoginPage(),
         '/torrents': (BuildContext context) => TorrentsPage(),
-        '/upload_torrent': (BuildContext context) => Tr_UploadPage(),
       },
       initialRoute: '/',
+      onGenerateRoute: (RouteSettings settings) {
+        final List<String> pathElements = settings.name.split('/');
+        if (pathElements[0] != '') {
+          return null;
+        }
+        if (pathElements[1] == 'upload_torrent') {
+          return MaterialPageRoute<bool>(
+            builder: (BuildContext context) =>
+                Tr_UploadPage(path: GlobalVariables.downloadDir),
+          );
+        }
+        return null;
+      },
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:community_material_icon/community_material_icon.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:transmission_app/model/async_ret.dart';
@@ -21,7 +22,6 @@ class _TorrentPageState extends State<TorrentsPage> {
   String _textShow = 'Refreshing...';
   bool _isLoading = false;
 
-  @override
   @override
   void initState() {
     super.initState();
@@ -155,9 +155,60 @@ class _TorrentPageState extends State<TorrentsPage> {
     });
   }
 
+  Widget _buildSideDrawer(BuildContext context) {
+    return Drawer(
+      child: Column(
+        children: <Widget>[
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.blueGrey,
+            ),
+            child: Center(
+              child: SizedBox(
+                width: 60.0,
+                height: 60.0,
+                child: CircleAvatar(
+                  child: Text('Actions'),
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(CommunityMaterialIcons.upload),
+            title: Text('Upload Torrent'),
+            onTap: () {
+              Navigator.of(context).pop(); // 收起当前侧边
+              Navigator.pushNamed(context, '/upload_torrent').then((value) {
+                onRefresh();
+              });
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(CommunityMaterialIcons.logout_variant),
+            title: Text('Log out'),
+            onTap: () {
+              GlobalVariables.isAutoLogin = false;
+              Navigator.of(context).pop(); // 收起当前侧边
+              Navigator.pushReplacementNamed(context, '/');
+            },
+          ),
+          Divider(),
+          new ListTile(
+            //退出按钮
+            title: new Text('Close'),
+            leading: new Icon(CommunityMaterialIcons.close_box_multiple),
+            onTap: () => Navigator.of(context).pop(), //点击后收起侧边栏
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: _buildSideDrawer(context),
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
@@ -187,15 +238,19 @@ class _TorrentPageState extends State<TorrentsPage> {
           )),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          setState(() {
-            _textShow = 'Refreshing...';
-            _isLoading = true;
-          });
-          _getTorrents();
+          onRefresh();
         },
         tooltip: 'Refresh Page',
         child: Icon(Icons.autorenew),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  void onRefresh() {
+    setState(() {
+      _textShow = 'Refreshing...';
+      _isLoading = true;
+    });
+    _getTorrents();
   }
 }
