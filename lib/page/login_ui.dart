@@ -110,18 +110,30 @@ class _LoginPageState extends State<LoginPage> {
     });
     GlobalVariables.userInfo = _userInfo;
     WebInterface wi = WebInterface();
+    // do login
     wi.getSession().then((model) {
-      setState(() {
-        _isLoggingIn = false;
-      });
       if (model.isSuccess) {
-        Toast.show('Login success ', context, miliseconds: 600);
-        // Navigate to next page
-        Navigator.of(context).pushReplacementNamed('/torrents');
-        if (_saveAccount) {
-          SharedPreferenceUtil.saveUser(_userInfo);
-        }
+        // login success, get session info, such as : download directory
+        wi.getSession().then((model) {
+          setState(() {
+            _isLoggingIn = false;
+          });
+          if (model.isSuccess) {
+            Toast.show('Login success ', context, miliseconds: 600);
+            // Navigate to next page
+            Navigator.of(context).pushReplacementNamed('/torrents');
+            if (_saveAccount) {
+              SharedPreferenceUtil.saveUser(_userInfo);
+            }
+          } else {
+            Toast.show('Login failed: ' + model.message, context,
+                miliseconds: 3000);
+          }
+        });
       } else {
+        setState(() {
+          _isLoggingIn = false;
+        });
         Toast.show('Login failed: ' + model.message, context,
             miliseconds: 3000);
       }

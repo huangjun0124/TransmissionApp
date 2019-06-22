@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:transmission_app/model/async_ret.dart';
 import 'package:transmission_app/model/global_vars.dart';
 import 'package:transmission_app/model/torrent_info.dart';
+import 'package:transmission_app/model/tr_spaceinfo.dart';
 
 import 'http_helper/http_dio.dart';
 
@@ -72,6 +73,9 @@ class WebInterface {
     if (response != null) {
       model.isSuccess = true;
       model.data = response.data;
+      GlobalVariables.downloadDir =
+          ((response.data as Map<String, dynamic>)["arguments"]
+              as Map<String, dynamic>)["download-dir"];
     }
     return model;
   }
@@ -169,6 +173,74 @@ class WebInterface {
     });
     model.data = torList;
     model.isSuccess = true;
+    return model;
+  }
+
+  Future<AsyncReturn> getFreeSpaceInfo(String path) async {
+    Response response;
+    AsyncReturn model = AsyncReturn();
+    _refreshHeader();
+    try {
+      response = await dio
+          .post(GlobalVariables.userInfo.url + "/transmission/rpc", data: {
+        "method": "free-space",
+        "arguments": {
+          "path": path,
+        }
+      });
+    } on DioError catch (error) {
+      model.isSuccess = false;
+      model.message = error.toString();
+      if (error.response != null) {
+        model.message += error.response.statusMessage;
+      }
+      model.data = error;
+    }
+    var data = (response.data as Map<String, dynamic>);
+    if (data["result"] == "success") {
+      var arguments = (data["arguments"] as Map<String, dynamic>);
+      try {
+        model.data = TrSpaceInfoModel(
+            path: arguments["path"], freeSpace: arguments["size-bytes"]);
+      } catch (e) {
+        model.isSuccess = false;
+        model.message = e.toString();
+        model.data = e;
+      }
+    }
+    return model;
+  }
+
+  Future<AsyncReturn> addTorrent(String dir, String fileName) async {
+    Response response;
+    AsyncReturn model = AsyncReturn();
+    _refreshHeader();
+    try {
+      response = await dio
+          .post(GlobalVariables.userInfo.url + "/transmission/rpc", data: {
+        "method": "torrent-add",
+        "arguments": {
+          "paused": false,
+          "download-dir": dir,
+          "filename": fileName
+        }
+      });
+    } on DioError catch (error) {
+      model.isSuccess = false;
+      model.message = error.toString();
+      if (error.response != null) {
+        model.message += error.response.statusMessage;
+      }
+      model.data = error;
+    }
+    var data = (response.data as Map<String, dynamic>);
+    if (data["result"] == "success") {
+      model.isSuccess = true;
+      GlobalVariables.downloadDir = dir;
+    } else {
+      model.isSuccess = false;
+      model.message = 'un-mapped error';
+    }
     return model;
   }
 }

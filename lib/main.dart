@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:transmission_app/page/login_ui.dart';
 import 'package:transmission_app/page/torrents.dart';
+import 'package:transmission_app/page/upload_torrent.dart';
 import 'package:transmission_app/services/http_helper/http_dio.dart';
 import 'package:transmission_app/services/http_helper/req_header.dart';
 
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (BuildContext context) => LoginPage(),
         '/torrents': (BuildContext context) => TorrentsPage(),
+        '/upload_torrent': (BuildContext context) => Tr_UploadPage(),
       },
       initialRoute: '/',
     );
