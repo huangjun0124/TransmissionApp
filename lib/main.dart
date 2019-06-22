@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:transmission_app/ui/login_ui.dart';
+import 'package:transmission_app/page/login_ui.dart';
 
 void main() => runApp(MyApp());
 

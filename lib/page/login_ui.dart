@@ -1,5 +1,10 @@
 import 'package:community_material_icon/community_material_icon.dart';
 import 'package:flutter/material.dart';
+import 'package:transmission_app/model/async_ret.dart';
+import 'package:transmission_app/model/user.dart';
+import 'package:transmission_app/ui/loading_view.dart';
+import 'package:transmission_app/ui/toast_view.dart';
+import 'package:transmission_app/util/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -8,41 +13,67 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  String _url, _userName, _password;
   bool _isObscure = true, _saveAccount = true;
   Color _passwordEyeColor;
+  bool _isInitialLoading = true;
+  bool _isLoggingIn = false;
+  TrUser _userInfo = TrUser();
+
+  @override
+  void initState() {
+    super.initState();
+    _getSavedUserInfo();
+  }
+
+  _getSavedUserInfo() async {
+    var user = await SharedPreferenceUtil.getUser();
+    if (user != null) _userInfo = user;
+    setState(() {
+      _isInitialLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: () {
-              // 输入法弹出键盘时，触摸空白区域收起输入法
-              FocusScope.of(context).requestFocus(FocusNode());
-            },
-            child: Form(
-                key: _formKey,
-                child: ListView(
-                  padding: EdgeInsets.symmetric(horizontal: 22.0),
-                  children: <Widget>[
-                    SizedBox(
-                      height: kToolbarHeight,
-                    ),
-                    buildTitle(),
-                    buildTitleLine(),
-                    SizedBox(height: 70.0),
-                    buildUrlTextField(),
-                    SizedBox(height: 30.0),
-                    buildUserNameTextField(),
-                    SizedBox(height: 30.0),
-                    buildPasswordTextField(context),
-                    SizedBox(height: 30.0),
-                    buildSaveAccount(),
-                    SizedBox(height: 70.0),
-                    buildLoginButton(context)
-                  ],
-                ))));
+      body: _isInitialLoading
+          ? Center(
+              child: Container(
+                child: CircularProgressIndicator(),
+              ),
+            )
+          : GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                // 输入法弹出键盘时，触摸空白区域收起输入法
+                FocusScope.of(context).requestFocus(FocusNode());
+              },
+              child: ProgressDialog(
+                  loading: _isLoggingIn,
+                  msg: "Logging in...",
+                  child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        padding: EdgeInsets.symmetric(horizontal: 22.0),
+                        children: <Widget>[
+                          SizedBox(
+                            height: kToolbarHeight,
+                          ),
+                          buildTitle(),
+                          buildTitleLine(),
+                          SizedBox(height: 70.0),
+                          buildUrlTextField(),
+                          SizedBox(height: 30.0),
+                          buildUserNameTextField(),
+                          SizedBox(height: 30.0),
+                          buildPasswordTextField(context),
+                          SizedBox(height: 30.0),
+                          buildSaveAccount(),
+                          SizedBox(height: 70.0),
+                          buildLoginButton(context)
+                        ],
+                      )))),
+    );
   }
 
   Align buildLoginButton(BuildContext context) {
@@ -60,14 +91,36 @@ class _LoginPageState extends State<LoginPage> {
             if (_formKey.currentState.validate()) {
               ///Only all text field validates, will code reach here
               _formKey.currentState.save();
-              //TODO 执行登录方法
-              print('email:$_userName , assword:$_password');
+              setState(() {
+                _isLoggingIn = true;
+              });
+              // todo login
+              // log in success, save login info
+              if (_saveAccount) {
+                _doLogin();
+              }
             }
           },
           shape: StadiumBorder(side: BorderSide()),
         ),
       ),
     );
+  }
+
+  _doLogin() async {
+    await Future.delayed(Duration(seconds: 3), () {
+      SharedPreferenceUtil.saveUser(_userInfo).then((AsyncReturn ret) {
+        setState(() {
+          _isLoggingIn = false;
+        });
+        if (ret.isSuccess) {
+          // todo redirect to  content page
+        } else {
+          Toast.show('Login failed: ' + ret.message, context,
+              miliseconds: 1500);
+        }
+      });
+    });
   }
 
   SwitchListTile buildSaveAccount() {
@@ -84,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
 
   TextFormField buildPasswordTextField(BuildContext context) {
     return TextFormField(
-      onSaved: (String value) => _password = value,
+      onSaved: (String value) => _userInfo.passWord = value,
       obscureText: _isObscure,
       validator: (String value) {
         if (value.isEmpty) {
@@ -92,6 +145,7 @@ class _LoginPageState extends State<LoginPage> {
         }
         return null;
       },
+      initialValue: _userInfo.passWord,
       decoration: InputDecoration(
           icon: new Icon(CommunityMaterialIcons.textbox_password,
               color: Colors.black),
@@ -127,7 +181,8 @@ class _LoginPageState extends State<LoginPage> {
         }
         return null;
       },
-      onSaved: (String value) => _url = value,
+      onSaved: (String value) => _userInfo.url = value,
+      initialValue: _userInfo.url,
     );
   }
 
@@ -143,7 +198,8 @@ class _LoginPageState extends State<LoginPage> {
         }
         return null;
       },
-      onSaved: (String value) => _userName = value,
+      onSaved: (String value) => _userInfo.userName = value,
+      initialValue: _userInfo.userName,
     );
   }
 
