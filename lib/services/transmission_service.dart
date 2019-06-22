@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:transmission_app/model/async_ret.dart';
 import 'package:transmission_app/model/global_vars.dart';
+import 'package:transmission_app/model/torrent_info.dart';
 
 import 'http_helper/http_dio.dart';
 
@@ -72,6 +73,102 @@ class WebInterface {
       model.isSuccess = true;
       model.data = response.data;
     }
+    return model;
+  }
+
+  Future<AsyncReturn> removeTorrent(int id) async {
+    AsyncReturn model = AsyncReturn();
+    Response response;
+    _refreshHeader();
+    try {
+      response = await dio
+          .post(GlobalVariables.userInfo.url + "/transmission/rpc", data: {
+        "method": "torrent-remove",
+        "arguments": {
+          "delete-local-data": true,
+          "ids": [id]
+        }
+      });
+    } on DioError catch (error) {
+      model.isSuccess = false;
+      model.message = error.toString();
+      if (error.response != null) {
+        model.message += error.response.statusMessage;
+      }
+      model.data = error;
+    }
+    if ((response.data as Map<String, dynamic>)["result"] == "success") {
+      model.isSuccess = true;
+      model.data = response.data;
+    }
+    return model;
+  }
+
+  Future<AsyncReturn> getTorrents() async {
+    AsyncReturn model = AsyncReturn();
+    List<Torrent> torList = new List<Torrent>();
+    Response response;
+    _refreshHeader();
+    var jsonData = {
+      "method": "torrent-get",
+      "arguments": {
+        "fields": [
+          "id",
+          "addedDate",
+          "name",
+          "totalSize",
+          "error",
+          "errorString",
+          "eta",
+          "isFinished",
+          "isStalled",
+          "leftUntilDone",
+          "metadataPercentComplete",
+          "peersConnected",
+          "peersGettingFromUs",
+          "peersSendingToUs",
+          "percentDone",
+          "queuePosition",
+          "rateDownload",
+          "rateUpload",
+          "recheckProgress",
+          "seedRatioMode",
+          "seedRatioLimit",
+          "sizeWhenDone",
+          "status",
+          "trackers",
+          "downloadDir",
+          "uploadedEver",
+          "uploadRatio",
+          "webseedsSendingToUs",
+          "downloadedEver"
+        ]
+      }
+    };
+    try {
+      response = await dio.post(
+          GlobalVariables.userInfo.url + "/transmission/rpc",
+          data: jsonData);
+    } on DioError catch (error) {
+      model.isSuccess = false;
+      model.message = error.toString();
+      if (error.response != null) {
+        model.message += error.response.statusMessage;
+      }
+      model.data = error;
+    }
+
+    var torrents = ((response.data as Map<String, dynamic>)["arguments"]
+        as Map<String, dynamic>)["torrents"] as List;
+    for (Map<String, dynamic> json in torrents) {
+      var torrent = new Torrent.fromJson(json);
+      torList.add(torrent);
+    }
+    torList.sort((Torrent a, Torrent b) {
+      return a.status - b.status;
+    });
+    model.data = torList;
+    model.isSuccess = true;
     return model;
   }
 }

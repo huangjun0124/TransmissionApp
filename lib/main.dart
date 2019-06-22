@@ -4,8 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:transmission_app/page/login_ui.dart';
+import 'package:transmission_app/page/torrents.dart';
 import 'package:transmission_app/services/http_helper/http_dio.dart';
 import 'package:transmission_app/services/http_helper/req_header.dart';
+
+import 'model/global_vars.dart';
 
 // Must be top-level function
 _parseAndDecode(String response) {
@@ -30,7 +33,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Transmission',
+      title: GlobalVariables.title,
       theme: ThemeData(
           brightness: Brightness.light,
           primarySwatch: Colors.blueGrey,
@@ -38,6 +41,7 @@ class MyApp extends StatelessWidget {
           buttonColor: Colors.redAccent),
       routes: {
         '/': (BuildContext context) => LoginPage(),
+        '/torrents': (BuildContext context) => TorrentsPage(),
       },
       initialRoute: '/',
     );

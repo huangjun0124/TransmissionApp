@@ -117,6 +117,7 @@ class _LoginPageState extends State<LoginPage> {
       if (model.isSuccess) {
         Toast.show('Login success ', context, miliseconds: 600);
         // Navigate to next page
+        Navigator.of(context).pushReplacementNamed('/torrents');
         if (_saveAccount) {
           SharedPreferenceUtil.saveUser(_userInfo);
         }
@@ -225,7 +226,7 @@ class _LoginPageState extends State<LoginPage> {
     return Padding(
       padding: EdgeInsets.all(8.0),
       child: Text(
-        'Transmission',
+        GlobalVariables.title,
         style: TextStyle(fontSize: 42.0),
       ),
     );
