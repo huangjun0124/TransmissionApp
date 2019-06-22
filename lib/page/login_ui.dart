@@ -1,7 +1,8 @@
 import 'package:community_material_icon/community_material_icon.dart';
 import 'package:flutter/material.dart';
-import 'package:transmission_app/model/async_ret.dart';
+import 'package:transmission_app/model/global_vars.dart';
 import 'package:transmission_app/model/user.dart';
+import 'package:transmission_app/services/transmission_service.dart';
 import 'package:transmission_app/ui/loading_view.dart';
 import 'package:transmission_app/ui/toast_view.dart';
 import 'package:transmission_app/util/shared_preferences.dart';
@@ -17,7 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   Color _passwordEyeColor;
   bool _isInitialLoading = true;
   bool _isLoggingIn = false;
-  TrUser _userInfo = TrUser();
+  TrUser _userInfo = TrUser(url: 'http://ip:port');
 
   @override
   void initState() {
@@ -31,6 +32,9 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _isInitialLoading = false;
     });
+    if (_userInfo.passWord != null) {
+      _doLogin();
+    }
   }
 
   @override
@@ -91,14 +95,7 @@ class _LoginPageState extends State<LoginPage> {
             if (_formKey.currentState.validate()) {
               ///Only all text field validates, will code reach here
               _formKey.currentState.save();
-              setState(() {
-                _isLoggingIn = true;
-              });
-              // todo login
-              // log in success, save login info
-              if (_saveAccount) {
-                _doLogin();
-              }
+              _doLogin();
             }
           },
           shape: StadiumBorder(side: BorderSide()),
@@ -108,18 +105,25 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _doLogin() async {
-    await Future.delayed(Duration(seconds: 3), () {
-      SharedPreferenceUtil.saveUser(_userInfo).then((AsyncReturn ret) {
-        setState(() {
-          _isLoggingIn = false;
-        });
-        if (ret.isSuccess) {
-          // todo redirect to  content page
-        } else {
-          Toast.show('Login failed: ' + ret.message, context,
-              miliseconds: 1500);
-        }
+    setState(() {
+      _isLoggingIn = true;
+    });
+    GlobalVariables.userInfo = _userInfo;
+    WebInterface wi = WebInterface();
+    wi.getSession().then((model) {
+      setState(() {
+        _isLoggingIn = false;
       });
+      if (model.isSuccess) {
+        Toast.show('Login success ', context, miliseconds: 600);
+        // Navigate to next page
+        if (_saveAccount) {
+          SharedPreferenceUtil.saveUser(_userInfo);
+        }
+      } else {
+        Toast.show('Login failed: ' + model.message, context,
+            miliseconds: 3000);
+      }
     });
   }
 
