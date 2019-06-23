@@ -29,7 +29,7 @@ class _TorrentPageState extends State<TorrentsPage> {
   void initState() {
     super.initState();
     _getTorrents();
-    _timer = Timer.periodic(Duration(milliseconds: 1800), (timer) {
+    _timer = Timer.periodic(Duration(milliseconds: 2300), (timer) {
       _getTorrents(); //定时更新列表
     });
   }
@@ -76,15 +76,22 @@ class _TorrentPageState extends State<TorrentsPage> {
                       ' GB'),
                   trailing: _buildDelButton(context, tor),
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('[D] ' +
-                      (tor.rateDownload / 1024.0).toStringAsFixed(2) +
-                      ' KB/s   ' +
-                      '[U] ' +
-                      (tor.rateUpload / 1024.0).toStringAsFixed(2) +
-                      ' KB/s'),
-                ),
+                tor.errorString == ''
+                    ? Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text('[D] ' +
+                            (tor.rateDownload / 1024.0).toStringAsFixed(2) +
+                            ' KB/s   ' +
+                            '[U] ' +
+                            (tor.rateUpload / 1024.0).toStringAsFixed(2) +
+                            ' KB/s'),
+                      )
+                    : Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'Error: ' + tor.errorString,
+                          style: TextStyle(color: Colors.red),
+                        )),
                 Divider(
                   height: 1,
                 )
