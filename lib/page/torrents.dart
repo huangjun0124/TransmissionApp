@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:community_material_icon/community_material_icon.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +23,22 @@ class _TorrentPageState extends State<TorrentsPage> {
   TransmissionModel _model = TransmissionModel();
   String _textShow = 'Refreshing...';
   bool _isLoading = false;
+  Timer _timer;
 
   @override
   void initState() {
     super.initState();
     _getTorrents();
+    _timer = Timer.periodic(Duration(milliseconds: 1800), (timer) {
+      _getTorrents(); //定时更新列表
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    super.dispose();
   }
 
   getItem(Torrent tor) {
@@ -145,10 +158,10 @@ class _TorrentPageState extends State<TorrentsPage> {
         totalUpRate += tor.rateUpload;
       }
       _textShow = 'File Size Total 【' + totalSize.toStringAsFixed(2) + ' GB】\n';
-      _textShow += 'Download speed: 【' +
+      _textShow += '[D] speed: 【' +
           (totalDownRate / 1024.0).toStringAsFixed(2) +
           '】KB/s  ' +
-          'Upload speed: 【' +
+          '[U] speed: 【' +
           (totalUpRate / 1024.0).toStringAsFixed(2) +
           '】KB/s';
       _model.torrents = tors;
