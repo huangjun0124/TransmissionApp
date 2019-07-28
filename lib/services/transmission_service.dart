@@ -56,19 +56,21 @@ class WebInterface {
           data: {"method": "session-get"});
     } on DioError catch (error) {
       _isError = true;
-      if (error.response.statusCode == 409) {
-        response = error.response;
-        _sessionId =
-            response.headers["x-transmission-session-id"][0]; // first login
-      } else if (error.response.statusCode == 401) {
-        model.isSuccess = false;
-        model.message = 'UserName and Password incorrect!';
+      if (error.response != null) {
+        if (error.response.statusCode == 409) {
+          response = error.response;
+          _sessionId =
+              response.headers["x-transmission-session-id"][0]; // first login
+        } else if (error.response.statusCode == 401) {
+          model.isSuccess = false;
+          model.message = 'UserName and Password incorrect!';
+        } else {
+          model.isSuccess = false;
+          model.message += error.response.statusMessage;
+        }
       } else {
         model.isSuccess = false;
         model.message = error.toString();
-        if (error.response != null) {
-          model.message += error.response.statusMessage;
-        }
         model.data = error;
       }
     }
@@ -80,8 +82,8 @@ class WebInterface {
             ((response.data as Map<String, dynamic>)["arguments"]
                 as Map<String, dynamic>)["download-dir"];
       }
-      return model;
     }
+    return model;
   }
 
   Future<AsyncReturn> removeTorrent(int id) async {
